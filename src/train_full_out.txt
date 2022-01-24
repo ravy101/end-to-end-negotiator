@@ -1,0 +1,73 @@
+dataset data/negotiate/train.txt, total 687919, unks 8718, ratio 1.27%
+sample input i2w:  ['2', '1', '1', '6', '2', '1']
+sample words:  ['YOU:', "i'd", 'like', 'the', 'hat', 'and', '1', 'ball', '.', '<eos>', 'THEM:', 'i', 'need', 'both', 'balls', '<eos>', 'YOU:', 'ok', '.', '<eos>', 'THEM:', '<selection>']
+Sample output:  ['item0=2', 'item1=1', 'item2=0', 'item0=0', 'item1=0', 'item2=2']
+dataset data/negotiate/val.txt, total 74653, unks 914, ratio 1.22%
+sample input i2w:  ['1', '10', '3', '0', '1', '0']
+sample words:  ['YOU:', 'i', 'need', 'the', 'book', 'and', 'two', 'hats', '<eos>', 'THEM:', 'i', 'get', 'the', 'ball', 'and', '1', 'hat', '<eos>', 'YOU:', 'actually', 'i', 'just', 'need', 'the', 'book', ',', 'so', 'you', 'can', 'have', 'the', 'rest', 'of', 'it', '<eos>', 'THEM:', 'you', 'get', 'book', 'since', 'its', 'worth', '10', 'to', 'you', 'i', 'get', 'the', 'rest', '.', 'deal', '<eos>', 'YOU:', '<selection>']
+Sample output:  ['item0=1', 'item1=0', 'item2=0', 'item0=0', 'item1=3', 'item2=1']
+dataset data/negotiate/test.txt, total 70262, unks 847, ratio 1.21%
+sample input i2w:  ['2', '4', '1', '2', '2', '0']
+sample words:  ['THEM:', 'i', 'want', 'the', 'balls', 'and', 'a', 'book', '<eos>', 'YOU:', 'i', 'can', 'not', 'make', 'that', 'deal', '.', 'you', 'can', 'have', 'the', 'balls', 'but', ',', 'i', 'need', 'the', 'books', 'and', 'the', 'hat', '<eos>', 'THEM:', 'ok', 'deal', '<eos>', 'YOU:', 'okay', 'great', '.', 'thank', 'you', '!', '<eos>', 'THEM:', '<selection>']
+Sample output:  ['item0=2', 'item1=1', 'item2=0', 'item0=0', 'item1=0', 'item2=2']
+| train | avg entropy 1.836 | avg max prob 0.470 | avg top3 prob 0.708
+| valid | avg entropy 1.574 | avg max prob 0.517 | avg top3 prob 0.758
+| epoch 001 | trainloss 1.571 | trainppl 4.813 | s/epoch 112.10 | lr 0.00100000
+| epoch 001 | validloss 1.706 | validppl 5.506
+| epoch 001 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.561 | avg max prob 0.518 | avg top3 prob 0.757
+| valid | avg entropy 1.572 | avg max prob 0.516 | avg top3 prob 0.746
+| epoch 002 | trainloss 1.547 | trainppl 4.698 | s/epoch 112.95 | lr 0.00100000
+| epoch 002 | validloss 1.698 | validppl 5.463
+| epoch 002 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.505 | avg max prob 0.529 | avg top3 prob 0.766
+| valid | avg entropy 1.598 | avg max prob 0.498 | avg top3 prob 0.745
+| epoch 003 | trainloss 1.542 | trainppl 4.673 | s/epoch 113.66 | lr 0.00100000
+| epoch 003 | validloss 1.696 | validppl 5.452
+| epoch 003 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.469 | avg max prob 0.539 | avg top3 prob 0.775
+| valid | avg entropy 1.521 | avg max prob 0.507 | avg top3 prob 0.757
+| epoch 004 | trainloss 1.538 | trainppl 4.656 | s/epoch 114.24 | lr 0.00100000
+| epoch 004 | validloss 1.694 | validppl 5.444
+| epoch 004 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.471 | avg max prob 0.534 | avg top3 prob 0.770
+| valid | avg entropy 1.435 | avg max prob 0.544 | avg top3 prob 0.785
+| epoch 005 | trainloss 1.536 | trainppl 4.647 | s/epoch 114.12 | lr 0.00100000
+| epoch 005 | validloss 1.696 | validppl 5.453
+| epoch 005 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.441 | avg max prob 0.543 | avg top3 prob 0.777
+| valid | avg entropy 1.317 | avg max prob 0.579 | avg top3 prob 0.812
+| epoch 006 | trainloss 1.534 | trainppl 4.636 | s/epoch 114.08 | lr 0.00100000
+| epoch 006 | validloss 1.702 | validppl 5.486
+| epoch 006 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.439 | avg max prob 0.544 | avg top3 prob 0.777
+| valid | avg entropy 1.412 | avg max prob 0.548 | avg top3 prob 0.783
+| epoch 007 | trainloss 1.532 | trainppl 4.627 | s/epoch 114.26 | lr 0.00100000
+| epoch 007 | validloss 1.695 | validppl 5.448
+| epoch 007 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.418 | avg max prob 0.550 | avg top3 prob 0.782
+| valid | avg entropy 1.360 | avg max prob 0.561 | avg top3 prob 0.792
+| epoch 008 | trainloss 1.530 | trainppl 4.618 | s/epoch 114.43 | lr 0.00100000
+| epoch 008 | validloss 1.699 | validppl 5.469
+| epoch 008 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.399 | avg max prob 0.554 | avg top3 prob 0.785
+| valid | avg entropy 1.447 | avg max prob 0.531 | avg top3 prob 0.776
+| epoch 009 | trainloss 1.529 | trainppl 4.616 | s/epoch 114.18 | lr 0.00100000
+| epoch 009 | validloss 1.695 | validppl 5.446
+| epoch 009 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.397 | avg max prob 0.554 | avg top3 prob 0.783
+| valid | avg entropy 1.458 | avg max prob 0.539 | avg top3 prob 0.776
+| epoch 010 | trainloss 1.528 | trainppl 4.611 | s/epoch 114.65 | lr 0.00100000
+| epoch 010 | validloss 1.696 | validppl 5.453
+| epoch 010 | validselectloss 0.000 | validselectppl 1.000
+| start annealing | best combined loss 1.694 | best combined ppl 5.444
+| train | avg entropy 1.467 | avg max prob 0.532 | avg top3 prob 0.770
+| valid | avg entropy 1.445 | avg max prob 0.541 | avg top3 prob 0.780
+| epoch 011 | trainloss 1.532 | trainppl 4.627 | s/epoch 114.38 | lr 0.00020000
+| epoch 011 | validloss 1.695 | validppl 5.448
+| epoch 011 | validselectloss 0.000 | validselectppl 1.000
+| train | avg entropy 1.455 | avg max prob 0.537 | avg top3 prob 0.773
+| valid | avg entropy 1.488 | avg max prob 0.520 | avg top3 prob 0.768
+| epoch 012 | trainloss 1.528 | trainppl 4.608 | s/epoch 115.34 | lr 0.00004000
+| epoch 012 | validloss 1.693 | validppl 5.436
+| epoch 012 | validselectloss 0.000 | validselectppl 1.000

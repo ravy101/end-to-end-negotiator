@@ -22,12 +22,15 @@ class Chat(object):
 
     def run(self):
         self.logger.dump('Welcome to our Chatroulette!')
-        for dialog_id in itertools.count():
+        #for dialog_id in itertools.count():
+        dialog_id = 0
+        for ctx in self.ctx_gen.iter():
+            dialog_id += 1
             self.logger.dump('=' * 80)
             self.logger.dump('Dialog %d' % dialog_id)
             self.logger.dump('-' * 80)
-            ctxs = self.ctx_gen.sample()
-            self.dialog.run(ctxs, self.logger)
+            #ctxs = self.ctx_gen.sample()
+            self.dialog.run(ctx, self.logger)
             self.logger.dump('=' * 80)
             self.logger.dump('')
 
@@ -36,6 +39,8 @@ def main():
     parser = argparse.ArgumentParser(description='chat utility')
     parser.add_argument('--model_file', type=str,
         help='model file')
+    parser.add_argument('--selection_model_file', type=str,
+        help='selection model file')
     parser.add_argument('--domain', type=str, default='object_division',
         help='domain for the dialogue')
     parser.add_argument('--context_file', type=str, default='',
@@ -52,6 +57,10 @@ def main():
         help='successful dialog should have more than score_threshold in score')
     parser.add_argument('--seed', type=int, default=1,
         help='random seed')
+    parser.add_argument('--dumb_ai', action='store_true', default=False,
+        help='make AI smart again')
+    parser.add_argument('--hide_ai_context', action='store_true', default=False,
+        help='hide the AI values from the human player')
     parser.add_argument('--smart_ai', action='store_true', default=False,
         help='make AI smart again')
     parser.add_argument('--ai_starts', action='store_true', default=False,
@@ -66,10 +75,18 @@ def main():
     utils.set_seed(args.seed)
 
     human = HumanAgent(domain.get_domain(args.domain))
+    model = utils.load_model(args.model_file)
+    #if args.smart_ai:
+    #    alice_ty = RnnRolloutAgent 
+    #elif args.dumb_ai:
+    #    alice_ty = RnnAgent
+    #else:
+    #    alice_ty = HierarchicalAgent
 
-    alice_ty = RnnRolloutAgent if args.smart_ai else HierarchicalAgent
-    ai = alice_ty(utils.load_model(args.model_file), args)
+    alice_ty =  utils.get_agent_type(model, smart=args.smart_ai)
+    ai = alice_ty(model, args)
 
+    print(type(ai))
 
     agents = [ai, human] if args.ai_starts else [human, ai]
 

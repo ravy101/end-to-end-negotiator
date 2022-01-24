@@ -105,6 +105,30 @@ class EngineBase(object):
         #total_future_loss /= len(validset)
         return total_valid_loss, total_select_loss, total_partner_ctx_loss, {}
 
+    def sample_pass(self, validset, validset_stats):
+        self.model.eval()
+
+        total_valid_loss, total_select_loss, total_partner_ctx_loss = 0, 0, 0
+        sample_input = []
+        sample_output = []
+        sample_target = []
+        for batch in validset:
+            valid_loss, select_loss, partner_ctx_loss, out_pred, out_tgt = self.sample_batch(batch)
+            total_valid_loss += valid_loss
+            total_select_loss += select_loss
+            total_partner_ctx_loss += partner_ctx_loss
+            sample_input.append(batch)
+            sample_output.append(out_pred)
+            sample_target.append(out_tgt)
+
+        # Dividing by the number of words in the input, not the tokens modeled,
+        # because the latter includes padding
+        total_valid_loss /= validset_stats['nonpadn']
+        total_select_loss /= len(validset)
+        total_partner_ctx_loss /= len(validset)
+        #total_future_loss /= len(validset)
+        return total_valid_loss, total_select_loss, total_partner_ctx_loss, {'input': sample_input, 'output':sample_output, 'target':sample_target}
+
     def iter(self, epoch, lr, traindata, validdata):
         trainset, _ = traindata
         validset, validset_stats = validdata
@@ -172,3 +196,22 @@ class EngineBase(object):
                 epoch, lr, traindata, validdata)
 
         return train_loss, valid_loss, valid_select_loss, extra
+
+
+    def test(self, corpus):
+        testdata = corpus.test_dataset(self.args.bsz)
+
+        testset, testset_stats = testdata
+        test_loss, test_select_loss, test_partner_ctx_loss, extra = \
+            self.sample_pass(testset, testset_stats)
+
+        if self.verbose:
+            print('|  testloss %.3f | testppl %.3f' % (
+                test_loss, np.exp(test_loss)))
+            print('|  testselectloss %.3f | testselectppl %.3f' % (
+                test_select_loss, np.exp(test_select_loss)))
+            if self.model.args.partner_ctx_weight != 0:
+                print('| validpartnerctxloss %.3f | validpartnerctxppl %.3f' % (
+                    test_partner_ctx_loss, np.exp(test_partner_ctx_loss)))
+
+        return test_loss, test_select_loss, extra

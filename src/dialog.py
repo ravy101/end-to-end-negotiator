@@ -150,7 +150,8 @@ class Dialog(object):
         for agent, ctx, partner_ctx in zip(self.agents, ctxs, reversed(ctxs)):
             agent.feed_context(ctx)
             agent.feed_partner_context(partner_ctx)
-            logger.dump_ctx(agent.name, ctx)
+            if not self.args.hide_ai_context or agent.human:
+                logger.dump_ctx(agent.name, ctx)
         logger.dump('-' * 80)
 
         # Choose who goes first by random
@@ -168,6 +169,7 @@ class Dialog(object):
         expired = False
 
         while True:
+            #print(f"Writer is {type(writer)}")
             out = writer.write(max_words=words_left)
             words_left -= len(out)
             length += len(out)

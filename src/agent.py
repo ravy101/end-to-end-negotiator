@@ -245,7 +245,7 @@ class HierarchicalAgent(RnnAgent):
 
 
 class RnnRolloutAgent(RnnAgent):
-    def __init__(self, model, args, name='Alice', train=False):
+    def __init__(self, model, args, name='Alice', train=False, diverse=False):
         super(RnnRolloutAgent, self).__init__(model, args, name)
         self.ncandidate = 5
         self.nrollout = 3
@@ -2301,7 +2301,7 @@ class BaselineClusteringRolloutAgent(BaselineClusteringAgent):
 
 
 
-"""
+
 
 
 class HumanAgent(Agent):
@@ -2316,7 +2316,7 @@ class HumanAgent(Agent):
     def feed_partner_context(self, partner_context):
         pass
 
-    def write(self):
+    def write(self, max_words = 100):
         while True:
             try:
                 return input('%s : ' % self.name).lower().strip().split() + ['<eos>']
@@ -2328,11 +2328,23 @@ class HumanAgent(Agent):
     def choose(self):
         while True:
             try:
-                choice = input('%s choice: ' % self.name)
-                return self.domain.parse_human_choice(self.ctx, choice)
+                valid_choice = False
+                while not valid_choice:
+                    human_choice = input('Please enter %s choice : ' % self.name)
+                    try:
+                        choice = self.domain.parse_human_choice(self.ctx, human_choice)
+                        valid_choice = True
+                    except:
+                        print("Unable to parse selection. Please enter 3 integers separated by spaces indicating the number of books, hats and balls selected.")
+                return choice
             except KeyboardInterrupt:
                 sys.exit()
             #except:
             #    print('Your choice is invalid! Try again.')
+        
+    
+    def update(self, agree, max_reward, choice=None, partner_choice=None,
+        partner_input=None, max_partner_reward=None):
+        pass
 
-"""
+

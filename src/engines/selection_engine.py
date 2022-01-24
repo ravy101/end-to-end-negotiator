@@ -18,6 +18,7 @@ class SelectionEngine(EngineBase):
             bad_toks=['<disconnect>', '<disagree>'],
             reduction='mean' if args.sep_sel else 'none')
 
+
     def _forward(model, batch, sep_sel=False):
         ctx, _, inpts, lens, _, sel_tgt, rev_idxs, hid_idxs, _ = batch
         ctx = Variable(ctx)
@@ -64,5 +65,19 @@ class SelectionEngine(EngineBase):
             loss /= sel_out[0].size(0)
 
         return 0, loss.item(), 0
+
+    def sample_batch(self, batch):
+        with torch.no_grad():
+            sel_out, sel_tgt = SelectionEngine._forward(self.model, batch,
+                sep_sel=self.args.sep_sel)
+        loss = 0
+        if self.args.sep_sel:
+            loss = self.sel_crit(sel_out, sel_tgt)
+        else:
+            for out, tgt in zip(sel_out, sel_tgt):
+                loss += self.sel_crit(out, tgt)
+            loss /= sel_out[0].size(0)
+
+        return 0, loss.item(), 0, sel_out, sel_tgt
 
 

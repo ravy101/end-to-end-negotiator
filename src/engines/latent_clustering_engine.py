@@ -126,6 +126,7 @@ class LatentClusteringEngine(EngineBase):
 
         for batch in trainset:
             self.t += 1
+            print(batch[0])
             loss, (entropy, max_prob, top3_prob, enc_entropy, enc_max_prob, enc_top3_prob) = self.train_batch(batch)
 
             if self.args.visual and self.t % 100 == 0:
@@ -199,6 +200,55 @@ class LatentClusteringEngine(EngineBase):
             'entropy': total_entropy,
             'avg_max_prob': total_max_prob,
             'avg_top3_prob': total_top3_prob,
+        }
+
+        return total_valid_loss, total_select_loss, total_partner_ctx_loss, extra
+
+    def test_pass(self, validset, validset_stats):
+        self.model.eval()
+
+        total_valid_loss, total_select_loss, total_partner_ctx_loss = 0, 0, 0
+        total_entropy = 0
+        total_max_prob = 0
+        total_top3_prob = 0
+        total_enc_entropy = 0
+        total_enc_max_prob = 0
+        total_enc_top3_prob = 0
+        for batch in validset:
+            valid_loss, select_loss, partner_ctx_loss, (entropy, max_prob, top3_prob, enc_entropy, enc_max_prob, enc_top3_prob) = self.valid_batch(batch)
+            total_valid_loss += valid_loss
+            total_select_loss += select_loss
+            total_partner_ctx_loss += partner_ctx_loss
+            total_entropy += entropy
+            total_max_prob += max_prob
+            total_top3_prob += top3_prob
+            total_enc_entropy += enc_entropy
+            total_enc_max_prob += enc_max_prob
+            total_enc_top3_prob += enc_top3_prob
+
+        # Dividing by the number of words in the input, not the tokens modeled,
+        # because the latter includes padding
+        total_valid_loss /= validset_stats['nonpadn']
+        total_select_loss /= len(validset)
+        total_partner_ctx_loss /= len(validset)
+        #total_future_loss /= len(validset)
+        total_entropy /= len(validset)
+        total_max_prob /= len(validset)
+        total_top3_prob /= len(validset)
+        total_enc_entropy /= len(validset)
+        total_enc_max_prob /= len(validset)
+        total_enc_top3_prob /= len(validset)
+
+        print('| valid | avg entropy %.3f | avg max prob %.3f | avg top3 prob %.3f ' % (
+            total_entropy, total_max_prob, total_top3_prob))
+        print('| valid | enc avg entropy %.3f | enc avg max prob %.3f | enc avg top3 prob %.3f ' % (
+            total_enc_entropy, total_enc_max_prob, total_enc_top3_prob))
+
+        extra = {
+            'entropy': total_entropy,
+            'avg_max_prob': total_max_prob,
+            'avg_top3_prob': total_top3_prob,
+            'batch': batch
         }
 
         return total_valid_loss, total_select_loss, total_partner_ctx_loss, extra
@@ -450,6 +500,29 @@ class BaselineClusteringEngine(EngineBase):
             loss += l
 
         return loss.item(), 0, 0, stats
+
+    def sample_batch(self, batch):
+        with torch.no_grad():
+            losses, stats, lens = self._forward(batch)
+
+        loss = 0
+        for l in losses:
+            loss += l
+
+        return loss.item(), 0, 0, stats
+        #with torch.no_grad():
+        #    sel_out, sel_tgt = SelectionEngine._forward(self.model, batch,
+        #        sep_sel=self.args.sep_sel)
+        #loss = 0
+        #if self.args.sep_sel:
+        #    loss = self.sel_crit(sel_out, sel_tgt)
+        #else:
+        #    for out, tgt in zip(sel_out, sel_tgt):
+        #        loss += self.sel_crit(out, tgt)
+        #    loss /= sel_out[0].size(0)
+
+        #return 0, loss.item(), 0, sel_out, sel_tgt
+
 
     def train_pass(self, trainset):
         self.model.train()

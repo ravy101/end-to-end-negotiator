@@ -15,6 +15,9 @@ import sys
 import torch
 import numpy as np
 
+import agent
+from models.rnn_model import RnnModel
+from models.latent_clustering_model import LatentClusteringPredictionModel, BaselineClusteringModel
 
 def backward_hook(grad):
     """Hook for backward pass."""
@@ -112,10 +115,29 @@ class ManualContextGenerator(object):
 
     def _update_scores(self, ctx):
         for i in range(1, len(ctx), 2):
-            ctx[i] = np.random.randint(0, self.args.max_score + 1)
+            ctx[i] = np.random.randint(0, self.max_score + 1)
         return ctx
 
     def sample(self):
         ctx1 = self._input_ctx()
         ctx2 = self._update_scores(copy.copy(ctx1))
         return [ctx1, ctx2]
+
+def get_agent_type(model, smart=False):
+    if isinstance(model, LatentClusteringPredictionModel):
+        if smart:
+            return agent.LatentClusteringRolloutAgent
+        else:
+            return agent.LatentClusteringAgent
+    elif isinstance(model, RnnModel):
+        if smart:
+            return agent.RnnRolloutAgent
+        else:
+            return agent.RnnAgent
+    elif isinstance(model, BaselineClusteringModel):
+        if smart:
+            return agent.BaselineClusteringRolloutAgent
+        else:
+            return agent.BaselineClusteringAgent
+    else:
+        assert False, 'unknown model type: %s' % (model)

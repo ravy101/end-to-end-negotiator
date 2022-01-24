@@ -1,0 +1,64 @@
+dataset data/negotiate/train.txt, total 687919, unks 8718, ratio 1.27%
+sample input i2w:  ['2', '1', '1', '6', '2', '1']
+sample words:  ['YOU:', "i'd", 'like', 'the', 'hat', 'and', '1', 'ball', '.', '<eos>', 'THEM:', 'i', 'need', 'both', 'balls', '<eos>', 'YOU:', 'ok', '.', '<eos>', 'THEM:', '<selection>']
+Sample output:  ['item0=2', 'item1=1', 'item2=0', 'item0=0', 'item1=0', 'item2=2']
+dataset data/negotiate/val.txt, total 74653, unks 914, ratio 1.22%
+sample input i2w:  ['1', '10', '3', '0', '1', '0']
+sample words:  ['YOU:', 'i', 'need', 'the', 'book', 'and', 'two', 'hats', '<eos>', 'THEM:', 'i', 'get', 'the', 'ball', 'and', '1', 'hat', '<eos>', 'YOU:', 'actually', 'i', 'just', 'need', 'the', 'book', ',', 'so', 'you', 'can', 'have', 'the', 'rest', 'of', 'it', '<eos>', 'THEM:', 'you', 'get', 'book', 'since', 'its', 'worth', '10', 'to', 'you', 'i', 'get', 'the', 'rest', '.', 'deal', '<eos>', 'YOU:', '<selection>']
+Sample output:  ['item0=1', 'item1=0', 'item2=0', 'item0=0', 'item1=3', 'item2=1']
+dataset data/negotiate/test.txt, total 70262, unks 847, ratio 1.21%
+sample input i2w:  ['2', '4', '1', '2', '2', '0']
+sample words:  ['THEM:', 'i', 'want', 'the', 'balls', 'and', 'a', 'book', '<eos>', 'YOU:', 'i', 'can', 'not', 'make', 'that', 'deal', '.', 'you', 'can', 'have', 'the', 'balls', 'but', ',', 'i', 'need', 'the', 'books', 'and', 'the', 'hat', '<eos>', 'THEM:', 'ok', 'deal', '<eos>', 'YOU:', 'okay', 'great', '.', 'thank', 'you', '!', '<eos>', 'THEM:', '<selection>']
+Sample output:  ['item0=2', 'item1=1', 'item2=0', 'item0=0', 'item1=0', 'item2=2']
+| epoch 001 | trainloss 2.333 | trainppl 10.308 | s/epoch 52.72 | lr 0.00100000
+| epoch 001 | validloss 1.905 | validppl 6.718
+| epoch 001 | validselectloss 0.000 | validselectppl 1.000
+| epoch 002 | trainloss 1.888 | trainppl 6.609 | s/epoch 53.44 | lr 0.00100000
+| epoch 002 | validloss 1.770 | validppl 5.871
+| epoch 002 | validselectloss 0.000 | validselectppl 1.000
+| epoch 003 | trainloss 1.754 | trainppl 5.775 | s/epoch 53.39 | lr 0.00100000
+| epoch 003 | validloss 1.709 | validppl 5.525
+| epoch 003 | validselectloss 0.000 | validselectppl 1.000
+| epoch 004 | trainloss 1.661 | trainppl 5.263 | s/epoch 53.90 | lr 0.00100000
+| epoch 004 | validloss 1.653 | validppl 5.220
+| epoch 004 | validselectloss 0.000 | validselectppl 1.000
+| epoch 005 | trainloss 1.586 | trainppl 4.882 | s/epoch 53.48 | lr 0.00100000
+| epoch 005 | validloss 1.662 | validppl 5.267
+| epoch 005 | validselectloss 0.000 | validselectppl 1.000
+| epoch 006 | trainloss 1.513 | trainppl 4.543 | s/epoch 53.82 | lr 0.00100000
+| epoch 006 | validloss 1.668 | validppl 5.304
+| epoch 006 | validselectloss 0.000 | validselectppl 1.000
+| epoch 007 | trainloss 1.447 | trainppl 4.250 | s/epoch 53.87 | lr 0.00100000
+| epoch 007 | validloss 1.695 | validppl 5.446
+| epoch 007 | validselectloss 0.000 | validselectppl 1.000
+| epoch 008 | trainloss 1.376 | trainppl 3.960 | s/epoch 54.07 | lr 0.00100000
+| epoch 008 | validloss 1.702 | validppl 5.486
+| epoch 008 | validselectloss 0.000 | validselectppl 1.000
+| epoch 009 | trainloss 1.311 | trainppl 3.708 | s/epoch 53.68 | lr 0.00100000
+| epoch 009 | validloss 1.740 | validppl 5.697
+| epoch 009 | validselectloss 0.000 | validselectppl 1.000
+| epoch 010 | trainloss 1.248 | trainppl 3.484 | s/epoch 54.36 | lr 0.00100000
+| epoch 010 | validloss 1.774 | validppl 5.892
+| epoch 010 | validselectloss 0.000 | validselectppl 1.000
+| epoch 011 | trainloss 1.191 | trainppl 3.289 | s/epoch 54.62 | lr 0.00100000
+| epoch 011 | validloss 1.824 | validppl 6.197
+| epoch 011 | validselectloss 0.000 | validselectppl 1.000
+| epoch 012 | trainloss 1.141 | trainppl 3.130 | s/epoch 54.01 | lr 0.00100000
+| epoch 012 | validloss 1.901 | validppl 6.692
+| epoch 012 | validselectloss 0.000 | validselectppl 1.000
+| epoch 013 | trainloss 1.090 | trainppl 2.974 | s/epoch 54.51 | lr 0.00100000
+| epoch 013 | validloss 1.923 | validppl 6.841
+| epoch 013 | validselectloss 0.000 | validselectppl 1.000
+| epoch 014 | trainloss 1.047 | trainppl 2.850 | s/epoch 54.04 | lr 0.00100000
+| epoch 014 | validloss 1.977 | validppl 7.221
+| epoch 014 | validselectloss 0.000 | validselectppl 1.000
+| epoch 015 | trainloss 1.008 | trainppl 2.740 | s/epoch 53.81 | lr 0.00100000
+| epoch 015 | validloss 2.008 | validppl 7.448
+| epoch 015 | validselectloss 0.000 | validselectppl 1.000
+| start annealing | best combined loss 1.653 | best combined ppl 5.220
+| epoch 016 | trainloss 1.529 | trainppl 4.613 | s/epoch 54.97 | lr 0.00020000
+| epoch 016 | validloss 1.632 | validppl 5.116
+| epoch 016 | validselectloss 0.000 | validselectppl 1.000
+| epoch 017 | trainloss 1.479 | trainppl 4.391 | s/epoch 54.90 | lr 0.00004000
+| epoch 017 | validloss 1.627 | validppl 5.090
+| epoch 017 | validselectloss 0.000 | validselectppl 1.000
