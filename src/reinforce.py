@@ -21,7 +21,7 @@ import utils
 from utils import ContextGenerator
 from agent import RnnAgent, RnnRolloutAgent, RlAgent, HierarchicalAgent
 from dialog import Dialog, DialogLogger
-from selfplay import get_agent_type
+from utils import get_agent_type
 from domain import get_domain
 
 
@@ -135,6 +135,8 @@ def main():
         help='erase prediciton weights')
     parser.add_argument('--sep_sel', action='store_true', default=False,
         help='use separate classifiers for selection')
+    parser.add_argument('--hide_ai_context', action='store_true', default=False,
+        help='hide the AI values from the human player')
 
     args = parser.parse_args()
 

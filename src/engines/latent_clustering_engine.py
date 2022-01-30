@@ -126,7 +126,6 @@ class LatentClusteringEngine(EngineBase):
 
         for batch in trainset:
             self.t += 1
-            print(batch[0])
             loss, (entropy, max_prob, top3_prob, enc_entropy, enc_max_prob, enc_top3_prob) = self.train_batch(batch)
 
             if self.args.visual and self.t % 100 == 0:

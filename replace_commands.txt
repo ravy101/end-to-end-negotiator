@@ -1,0 +1,144 @@
+python train.py \
+--cuda \
+--data data/negotiate_replace \
+--bsz 16 \
+--clip 2.0 \
+--decay_every 1 \
+--decay_rate 5.0 \
+--domain object_division \
+--dropout 0.1 \
+--init_range 0.2 \
+--lr 0.001 \
+--max_epoch 7 \
+--min_lr 1e-05 \
+--model_type selection_model \
+--momentum 0.1 \
+--nembed_ctx 128 \
+--nembed_word 128 \
+--nhid_attn 128 \
+--nhid_ctx 64 \
+--nhid_lang 128 \
+--nhid_sel 128 \
+--nhid_strat 256 \
+--unk_threshold 20 \
+--skip_values \
+--sep_sel \
+--model_file selection_model_rp.th
+
+
+python train.py \
+--cuda \
+--data data/negotiate_replace \
+--bsz 16 \
+--clip 0.5 \
+--decay_every 1 \
+--decay_rate 5.0 \
+--domain object_division \
+--dropout 0.1 \
+--model_type rnn_model \
+--init_range 0.2 \
+--lr 0.001 \
+--max_epoch 30 \
+--min_lr 1e-07 \
+--momentum 0.1 \
+--nembed_ctx 64 \
+--nembed_word 256 \
+--nhid_attn 64 \
+--nhid_ctx 64 \
+--nhid_lang 128 \
+--nhid_sel 128 \
+--sel_weight 0.6 \
+--unk_threshold 20 \
+--sep_sel \
+--model_file rnn_model_rp.th
+
+
+
+python train.py \
+--cuda \
+--data data/negotiate_replace \
+--bsz 16 \
+--clip 2.0 \
+--decay_every 1 \
+--decay_rate 5.0 \
+--domain object_division \
+--dropout 0.2 \
+--init_range 0.3 \
+--lr 0.001 \
+--max_epoch 15 \
+--min_lr 1e-05 \
+--model_type latent_clustering_model \
+--momentum 0.1 \
+--nembed_ctx 64 \
+--nembed_word 256 \
+--nhid_ctx 64 \
+--nhid_lang 256 \
+--nhid_sel 128 \
+--nhid_strat 256 \
+--unk_threshold 20 \
+--num_clusters 50 \
+--sep_sel \
+--skip_values \
+--nhid_cluster 256 \
+--selection_model_file selection_model_rp.th \
+--model_file clustering_model_rp.th
+
+python train.py \
+--cuda \
+--data data/negotiate_replace \
+--bsz 16 \
+--clip 2.0 \
+--decay_every 1 \
+--decay_rate 5.0 \
+--domain object_division \
+--dropout 0.1 \
+--init_range 0.2 \
+--lr 0.001 \
+--max_epoch 15 \
+--min_lr 1e-05 \
+--model_type latent_clustering_language_model \
+--momentum 0.1 \
+--nembed_ctx 64 \
+--nembed_word 256 \
+--nhid_ctx 64 \
+--nhid_lang 256 \
+--nhid_sel 128 \
+--nhid_strat 256 \
+--unk_threshold 20 \
+--num_clusters 50 \
+--sep_sel \
+--nhid_cluster 256 \
+--skip_values \
+--selection_model_file selection_model_rp.th \
+--cluster_model_file clustering_model_rp.th \
+--model_file clustering_language_model_rp.th
+
+python train.py \
+--cuda \
+--data data/negotiate_replace \
+--bsz 8 \
+--clip 2.0 \
+--decay_every 1 \
+--decay_rate 5.0 \
+--domain object_division \
+--dropout 0.2 \
+--init_range 0.3 \
+--lr 0.001 \
+--max_epoch 10 \
+--min_lr 1e-05 \
+--model_type latent_clustering_prediction_model \
+--momentum 0.2 \
+--nembed_ctx 64 \
+--nembed_word 256 \
+--nhid_ctx 64 \
+--nhid_lang 256 \
+--nhid_sel 128 \
+--nhid_strat 256 \
+--unk_threshold 20 \
+--num_clusters 50 \
+--sep_sel \
+--selection_model_file selection_model_rp.th \
+--lang_model_file clustering_language_model_rp.th \
+--model_file full_model_rp.th
+
+

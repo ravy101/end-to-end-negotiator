@@ -1661,7 +1661,12 @@ class LatentClusteringAgent(HierarchicalAgent):
         _, lat_h, log_q_z = self.model.forward_prediction(self.cnt, self.mem_h, sample=self.train)
         if self.train:
             self.logprobs.append(log_q_z)
-            self.entropys.append(-(log_q_z.exp() * log_q_z).sum().data[0])
+            self.entropys.append(-(log_q_z.exp() * log_q_z).sum().item())
+            #self.entropys.append(-(log_q_z.exp() * log_q_z).sum().data[0])
+
+        #DW added this squeeze
+        if lat_h.dim() > self.lang_enc_h.dim():
+            lat_h = lat_h.squeeze(dim=0)
 
         out, logprobs = self.model.write(self.lang_enc_h, lat_h, max_words, self.args.temperature)
         #self.logprobs += logprobs
@@ -1689,10 +1694,12 @@ class LatentClusteringAgent(HierarchicalAgent):
 
         if not self.train:
             return
+
         self.t += 1
 
         if len(self.logprobs) == 0:
             return
+
 
         reward = max_reward if agree else 0
         partner_reward = max_partner_reward if agree else 0
@@ -1708,8 +1715,14 @@ class LatentClusteringAgent(HierarchicalAgent):
         loss = 0
         for lp, r in zip(self.logprobs, rewards):
             loss -= lp * r
+        
+
 
         self.opt.zero_grad()
+        
+        #DW added this check
+        self.model.train() 
+
         loss.backward()
 
         # don't update clusters
@@ -1756,7 +1769,7 @@ class LatentClusteringAgent(HierarchicalAgent):
         prob = F.softmax(choice_logit, dim=0)
 
         if sample:
-            idx = prob.multinomial().detach()
+            idx = prob.multinomial(num_samples=1).detach()
             logprob = F.log_softmax(choice_logit).gather(0, idx)
         else:
             _, idx = prob.max(0, keepdim=True)

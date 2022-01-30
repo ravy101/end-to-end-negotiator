@@ -24,6 +24,9 @@ class MlpContextEncoder(nn.Module):
         super(MlpContextEncoder, self).__init__()
 
         # embeddings for counts and values
+        #n is the number of unique tokens representing quantities or values (in this case the numbers 0 - 10). ie. 11
+        #k is the number of items (3)
+        #nembed is the embedding dimension (default 64)
         self.cnt_enc = nn.Sequential(
             nn.Embedding(n, nembed),
             nn.Dropout(dropout))

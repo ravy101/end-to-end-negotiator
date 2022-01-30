@@ -218,9 +218,9 @@ class WordCorpus(object):
         if self.verbose:
             print('dataset %s, total %d, unks %s, ratio %0.2f%%' % (
                 file_name, total, unks, 100. * unks / total))
-            print("sample input i2w: ", self.context_dict.i2w(dataset[0][0]))
-            print("sample words: ", self.word_dict.i2w(dataset[0][1]))
-            print("Sample output: ",  self.item_dict_old.i2w(dataset[0][2]))
+            #print("sample input i2w: ", self.context_dict.i2w(dataset[0][0]))
+            #print("sample words: ", self.word_dict.i2w(dataset[0][1]))
+            #print("Sample output: ",  self.item_dict_old.i2w(dataset[0][2]))
         return dataset
 
     def train_dataset(self, bsz, shuffle=True):

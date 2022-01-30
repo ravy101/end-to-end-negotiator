@@ -538,7 +538,7 @@ class LatentClusteringPredictionModel(nn.Module):
         _, q_z = self.latent_bottleneck(cnt, mem_h)
         # either sample or take max
         if sample:
-            z = q_z.multinomial().detach()
+            z = q_z.multinomial(num_samples=1).detach()
             log_q_z = q_z.log().gather(1, z)
         else:
             _, z = q_z.max(1)
