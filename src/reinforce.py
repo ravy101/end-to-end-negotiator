@@ -42,12 +42,15 @@ class Reinforce(object):
         for ctxs in self.ctx_gen.iter(self.args.nepoch):
             n += 1
             if self.args.sv_train_freq > 0 and n % self.args.sv_train_freq == 0:
-                batch = random.choice(trainset)
-                self.engine.model.train()
-                self.engine.train_batch(batch)
-                self.engine.model.eval()
+                self.logger.dump('-' * 20 + 'Supervised Batch' + '-' * 20)
+                #batch = random.choice(trainset)
+                #self.engine.model.train()
+                #self.engine.train_batch(batch)
+                #DW why eval here?
+                #self.engine.model.eval()
 
             self.logger.dump('=' * 80)
+            self.logger.dump(f"Game: {n+1}")
             self.dialog.run(ctxs, self.logger)
             self.logger.dump('=' * 80)
             self.logger.dump('')
@@ -55,12 +58,14 @@ class Reinforce(object):
                 self.logger.dump('%d: %s' % (n, self.dialog.show_metrics()), forced=True)
 
         def dump_stats(dataset, stats, name):
-            loss, select_loss = self.engine.valid_pass(N, dataset, stats)
+            #DW
+            #loss, select_loss = self.engine.valid_pass(dataset, stats)
+            total_valid_loss, total_select_loss, total_partner_ctx_loss, extra = self.engine.valid_pass(dataset, stats)
             self.logger.dump('final: %s_loss %.3f %s_ppl %.3f' % (
-                name, float(loss), name, np.exp(float(loss))),
+                name, float(total_valid_loss), name, np.exp(float(total_valid_loss))),
                 forced=True)
             self.logger.dump('final: %s_select_loss %.3f %s_select_ppl %.3f' % (
-                name, float(select_loss), name, np.exp(float(select_loss))),
+                name, float(total_select_loss), name, np.exp(float(total_select_loss))),
                 forced=True)
 
         dump_stats(trainset, trainset_stats, 'train')

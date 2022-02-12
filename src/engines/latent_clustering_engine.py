@@ -296,6 +296,10 @@ class LatentClusteringPredictionEngine(EngineBase):
         self.opt.zero_grad()
         loss.backward()
 
+        #DW dont update selection model either
+        self.sel_model.zero_grad()
+        self.model.ctx_encoder.zero_grad()
+
         # don't update clusters
         self.model.latent_bottleneck.zero_grad()
         # don't update language model

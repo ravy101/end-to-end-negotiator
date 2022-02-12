@@ -4,15 +4,16 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    
 
         {
             "name": "Python: Self Play",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "selfplay.py",
             "console": "integratedTerminal",
-            "args": ["--cuda","--alice_model_file","rnn_model.th","--bob_model_file","full_model.th",
-                "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--selection_model_file","selection_model.th", "--smart_alice"]
+            "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","full_model.th",
+                "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--selection_model_file","selection_model.th", "--alice_translator"]
         },
 
         {
@@ -22,6 +23,35 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": ["--cuda","--model_file","full_model.th","--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--selection_model_file","selection_model.th"]
+        },
+
+        {
+            "name": "Python: Reinforce Play",
+            "type": "python",
+            "request": "launch",
+            "program": "reinforce.py",
+            "console": "integratedTerminal",
+            "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","rnn_model_pp.th","--output_model_file","full_rl_model_pp.th","--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--verbose","--log_file","rnn_rl_pp.log","--sv_train_freq","4","--nepoch","4","--selection_model_file","selection_model.th","--rl_lr","0.00001","--rl_clip","0.0001","--sep_sel"]
+        },
+
+        {
+            "name": "Python: Reinforce Temp",
+            "type": "python",
+            "request": "launch",
+            "program": "reinforce.py",
+            "console": "integratedTerminal",
+            "args": ["--cuda","--alice_model_file","full_model_rp.th","--bob_model_file","rnn_model_rp.th","--output_model_file","full_rl_model_rp.th", "--data", "data/negotiate_replace/", "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--verbose","--log_file","rnn_rl_rp.log","--sv_train_freq","4","--nepoch","4","--selection_model_file","selection_model_rp.th","--rl_lr","0.00001","--rl_clip","0.0001","--sep_sel"]
+        },
+
+        {
+            "name": "Python: Reinforce Prepend",
+            "type": "python",
+            "request": "launch",
+            "program": "reinforce.py",
+            "console": "integratedTerminal",
+            "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","rnn_model_pp.th","--output_model_file","full_rl_model_pp.th", "--data", "data/negotiate_prepend/", "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--verbose","--log_file","rnn_rl_pp.log","--sv_train_freq","4","--nepoch","4","--selection_model_file","selection_model_pp.th","--rl_lr","0.00001","--rl_clip","0.0001","--sep_sel"]
         }
+
+
     ]
 }

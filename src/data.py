@@ -160,10 +160,11 @@ def create_dicts_from_file(domain, file_name, freq_cutoff):
 
 class WordCorpus(object):
     def __init__(self, domain, path, freq_cutoff=2, train='train.txt',
-        valid='val.txt', test='test.txt', verbose=False, sep_sel=False):
+        valid='val.txt', test='test.txt', verbose=False, sep_sel=False, drop_fold=0):
         self.domain = domain
         self.verbose = verbose
         self.sep_sel = sep_sel
+        self.drop_fold = drop_fold
         # Only add words from the train dataset
         self.word_dict, self.item_dict, self.context_dict, self.item_dict_old, self.count_dict = create_dicts_from_file(
             domain,
@@ -171,6 +172,14 @@ class WordCorpus(object):
             freq_cutoff=freq_cutoff)
 
         self.train = self.tokenize(os.path.join(path, train)) if train else []
+        
+        if train and drop_fold > 0:
+            start_index = int(len(self.train) * (drop_fold - 1)/5)
+            end_index = int(len(self.train) * drop_fold/5)
+            self.train = self.train[:start_index] + self.train[end_index:]
+            print(f"train items between {start_index} and {end_index} removed")
+
+
         self.valid = self.tokenize(os.path.join(path, valid)) if valid else []
         self.test = self.tokenize(os.path.join(path, test)) if test else []
 

@@ -1579,7 +1579,7 @@ class PredictionRolloutAgent(PredictionAgent):
 
 
 class LatentClusteringAgent(HierarchicalAgent):
-    def __init__(self, model, args, name='Alice', train=False, diverse=False):
+    def __init__(self, model, args, name='Alice', train=False, diverse=False, translator=None):
         super(LatentClusteringAgent, self).__init__(model, args, name)
         self.train = train
         if self.train:
@@ -1599,6 +1599,7 @@ class LatentClusteringAgent(HierarchicalAgent):
         self.acts = []
         self.logprobs = []
         self.entropys = []
+        self.translator = translator
 
         if train and args.validate:
             dom = domain.get_domain(args.domain)
@@ -1639,6 +1640,7 @@ class LatentClusteringAgent(HierarchicalAgent):
         self.lang_enc_h = self.model._zero(1, self.model.lang_model.args.nhid_lang)
         self.mem_h = self.model.forward_memory(self.ctx_h, mem_h=None, inpt=None)
 
+
     def choose(self):
         if not self.train or self.args.eps < np.random.rand():
             choice, _, _ = self._choose(sample=False)
@@ -1652,6 +1654,11 @@ class LatentClusteringAgent(HierarchicalAgent):
         return loss
 
     def read(self, inpt):
+        if self.translator:
+            plain_text = ' '.join(inpt[-1])
+            translation = self.translator.translate(plain_text).split()
+            translation.append('-')
+            translation.extend(inpt)
         inpt = ['THEM:'] + inpt
         inpt = Variable(self._encode(inpt, self.model.word_dict))
         self.sents.append(inpt)
@@ -1659,10 +1666,12 @@ class LatentClusteringAgent(HierarchicalAgent):
 
     def write(self, max_words=100):
         _, lat_h, log_q_z = self.model.forward_prediction(self.cnt, self.mem_h, sample=self.train)
+
         if self.train:
             self.logprobs.append(log_q_z)
-            self.entropys.append(-(log_q_z.exp() * log_q_z).sum().item())
+            #self.entropys.append(-(log_q_z.exp() * log_q_z).sum().item())
             #self.entropys.append(-(log_q_z.exp() * log_q_z).sum().data[0])
+            self.entropys.append(-(log_q_z.exp() * log_q_z).sum().data)
 
         #DW added this squeeze
         if lat_h.dim() > self.lang_enc_h.dim():
@@ -1672,8 +1681,12 @@ class LatentClusteringAgent(HierarchicalAgent):
         #self.logprobs += logprobs
         self.sents.append(out)
         self.lang_enc_h, self.mem_h = self.model.read(out, self.lang_enc_h, self.mem_h, self.ctx_h)
-
-        return self._decode(out[1:], self.model.word_dict)
+        output = self._decode(out[1:], self.model.word_dict)
+        if self.translator:
+            if '-' in output:
+                output = output[output.index('-')+1:]
+            #print(output)
+        return output
 
     def _make_idxs(self, sents):
         lens, rev_idxs, hid_idxs = [], [], []
@@ -1720,18 +1733,26 @@ class LatentClusteringAgent(HierarchicalAgent):
 
         self.opt.zero_grad()
         
-        #DW added this check
-        self.model.train() 
+        #DW added these checks
+        if not self.model.training:
+            self.model.train()    
+            
+        #this is maybe the issue, loss connected to the selection model
+        self.sel_model.train()
 
         loss.backward()
+
+        #DW dont update selection model either
+        self.sel_model.zero_grad()
 
         # don't update clusters
         self.model.latent_bottleneck.zero_grad()
         # don't update language model
         self.model.lang_model.zero_grad()
-
+        
         nn.utils.clip_grad_norm(self.model.parameters(), self.args.rl_clip)
         self.opt.step()
+
 
         if self.args.visual and self.t % 10 == 0:
             #self.model_plot.update(self.t)

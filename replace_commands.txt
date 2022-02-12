@@ -141,4 +141,5 @@ python train.py \
 --lang_model_file clustering_language_model_rp.th \
 --model_file full_model_rp.th
 
-
+################ using RL trained model
+python selfplay.py --cuda --alice_model_file full_rl_model_rp.th --bob_model_file full_rl_model_rp.th --context_file data/negotiate/selfplay.txt  --temperature 0.5 --selection_model_file selection_model_rp.th 

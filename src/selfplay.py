@@ -20,6 +20,7 @@ import utils
 from utils import ContextGenerator
 from dialog import Dialog, DialogLogger
 from models.rnn_model import RnnModel
+import models.translation_model
 from models.latent_clustering_model import LatentClusteringPredictionModel, BaselineClusteringModel
 import domain
 
@@ -105,20 +106,33 @@ def main():
         help='batch size')
     parser.add_argument('--validate', action='store_true', default=False,
         help='plot graphs')
+    parser.add_argument('--alice_translator', action='store_true', default=False,
+        help='translate for alice')
+    parser.add_argument('--bob_translator', action='store_true', default=False,
+        help='translate for bob')
 
     args = parser.parse_args()
 
     utils.use_cuda(args.cuda)
     utils.set_seed(args.seed)
 
+    alice_translator = None
+    bob_translator = None
+    if args.alice_translator or args.bob_translator:
+        translator = models.translation_model.TranslationModel()
+        if args.alice_translator:
+            alice_translator = translator
+        if args.bob_translator:
+            bob_translator = translator
+
     alice_model = utils.load_model(args.alice_model_file)
     alice_ty = utils.get_agent_type(alice_model, args.smart_alice)
-    alice = alice_ty(alice_model, args, name='Alice', train=False, diverse=args.diverse_alice)
+    alice = alice_ty(alice_model, args, name='Alice', train=False, diverse=args.diverse_alice, translator=alice_translator)
     alice.vis = args.visual
 
     bob_model = utils.load_model(args.bob_model_file)
     bob_ty =  utils.get_agent_type(bob_model, args.smart_bob)
-    bob = bob_ty(bob_model, args, name='Bob', train=False, diverse=args.diverse_bob)
+    bob = bob_ty(bob_model, args, name='Bob', train=False, diverse=args.diverse_bob, translator=bob_translator)
 
     bob.vis = False
 

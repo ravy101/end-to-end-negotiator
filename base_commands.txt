@@ -1,6 +1,6 @@
 python train.py \
 --cuda \
---data data/negotiate_prepend \
+--data data/negotiate \
 --bsz 16 \
 --clip 2.0 \
 --decay_every 1 \
@@ -28,7 +28,7 @@ python train.py \
 
 python train.py \
 --cuda \
---data data/negotiate_prepend \
+--data data/negotiate \
 --bsz 16 \
 --clip 0.5 \
 --decay_every 1 \
@@ -56,9 +56,10 @@ python train.py \
 
 python train.py \
 --cuda \
---data data/negotiate_prepend \
+--data data/negotiate \
 --bsz 16 \
 --clip 2.0 \
+--drop_fold 2 \
 --decay_every 1 \
 --decay_rate 5.0 \
 --domain object_division \
@@ -85,9 +86,10 @@ python train.py \
 
 python train.py \
 --cuda \
---data data/negotiate_prepend \
+--data data/negotiate \
 --bsz 16 \
 --clip 2.0 \
+--drop_fold 2 \
 --decay_every 1 \
 --decay_rate 5.0 \
 --domain object_division \
@@ -157,5 +159,6 @@ python reinforce.py \
 --rl_clip 0.0001 \
 --sep_sel
 
+["--cuda","--alice_model_file","full_model.th","--bob_model_file","full_model.th","--output_model_file","full_rl_model.th","--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--verbose","--log_file","rnn_rl.log","--sv_train_freq","4","--nepoch","4","--selection_model_file","selection_model.th","--rl_lr","0.00001","--rl_clip","0.0001","--sep_sel"]
 
 

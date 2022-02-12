@@ -65,6 +65,8 @@ def main():
         help='number of clusters')
     parser.add_argument('--bsz', type=int, default=25,
         help='batch size')
+    parser.add_argument('--drop_fold', type=int, default=0,
+        help='drop fold')    
     parser.add_argument('--unk_threshold', type=int, default=20,
         help='minimum word frequency to be in dictionary')
     parser.add_argument('--temperature', type=float, default=0.1,
@@ -109,7 +111,7 @@ def main():
     domain = get_domain(args.domain)
     model_ty = models.get_model_type(args.model_type)
     corpus = model_ty.corpus_ty(domain, args.data, freq_cutoff=args.unk_threshold,
-        verbose=True, sep_sel=args.sep_sel)
+        verbose=True, sep_sel=args.sep_sel, drop_fold = args.drop_fold)
     model = model_ty(corpus.word_dict, corpus.item_dict_old,
         corpus.context_dict, corpus.count_dict, args)
     if args.cuda:
