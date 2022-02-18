@@ -126,8 +126,14 @@ def main():
         help='plot graphs')
     parser.add_argument('--domain', type=str, default='object_division',
         help='domain for the dialogue')
-    parser.add_argument('--selection_model_file', type=str,  default='',
+    parser.add_argument('--alice_selection_model_file', type=str,  default='',
         help='path to save the final model')
+    parser.add_argument('--bob_selection_model_file', type=str,  default='',
+        help='path to save the final model')  
+    parser.add_argument('--alice_translator', action='store_true', default=False,
+        help='translate for alice')
+    parser.add_argument('--bob_translator', action='store_true', default=False,
+        help='translate for bob')    
     parser.add_argument('--data', type=str, default='data/negotiate',
         help='location of the data corpus')
     parser.add_argument('--unk_threshold', type=int, default=20,
@@ -148,14 +154,23 @@ def main():
     utils.use_cuda(args.cuda)
     utils.set_seed(args.seed)
 
+    alice_translator = None
+    bob_translator = None
+    if args.alice_translator or args.bob_translator:
+        translator = models.translation_model.TranslationModel()
+        if args.alice_translator:
+            alice_translator = translator
+        if args.bob_translator:
+            bob_translator = translator
+
     alice_model = utils.load_model(args.alice_model_file)
     alice_ty = get_agent_type(alice_model)
-    alice = alice_ty(alice_model, args, name='Alice', train=True)
+    alice = alice_ty(alice_model, args, name='Alice', train=True, translator=alice_translator)
     alice.vis = args.visual
 
     bob_model = utils.load_model(args.bob_model_file)
     bob_ty = get_agent_type(bob_model)
-    bob = bob_ty(bob_model, args, name='Bob', train=False)
+    bob = bob_ty(bob_model, args, name='Bob', train=False, translator=bob_translator)
 
     dialog = Dialog([alice, bob], args)
     logger = DialogLogger(verbose=args.verbose, log_file=args.log_file)

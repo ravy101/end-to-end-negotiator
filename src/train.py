@@ -103,10 +103,13 @@ def main():
         help='use separate classifiers for selection')
 
 
+
     args = parser.parse_args()
 
     utils.use_cuda(args.cuda)
     utils.set_seed(args.seed)
+
+
 
     domain = get_domain(args.domain)
     model_ty = models.get_model_type(args.model_type)

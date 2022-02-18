@@ -82,8 +82,14 @@ def main():
         help='rollout count threshold')
     parser.add_argument('--smart_bob', action='store_true', default=False,
         help='make Bob smart again')
-    parser.add_argument('--selection_model_file', type=str,  default='',
+    parser.add_argument('--alice_selection_model_file', type=str,  default='',
         help='path to save the final model')
+    parser.add_argument('--bob_selection_model_file', type=str,  default='',
+        help='path to save the final model')  
+    parser.add_argument('--alice_translator', action='store_true', default=False,
+        help='translate for alice')
+    parser.add_argument('--bob_translator', action='store_true', default=False,
+        help='translate for bob')     
     parser.add_argument('--rollout_model_file', type=str,  default='',
         help='path to save the final model')
     parser.add_argument('--diverse_bob', action='store_true', default=False,
@@ -106,10 +112,7 @@ def main():
         help='batch size')
     parser.add_argument('--validate', action='store_true', default=False,
         help='plot graphs')
-    parser.add_argument('--alice_translator', action='store_true', default=False,
-        help='translate for alice')
-    parser.add_argument('--bob_translator', action='store_true', default=False,
-        help='translate for bob')
+
 
     args = parser.parse_args()
 

@@ -128,6 +128,8 @@ class Dialog(object):
         self.metrics.register_time('time')
         self.metrics.register_average('comb_rew')
         self.metrics.register_average('agree_comb_rew')
+        #DW add pareto opt
+        self.metrics.register_percentage('pareto_opt')
         for agent in self.agents:
             self.metrics.register_average('%s_rew' % agent.name)
             self.metrics.register_moving_average('%s_moving_rew' % agent.name)
@@ -224,6 +226,7 @@ class Dialog(object):
         self.metrics.record('agree', int(agree))
         self.metrics.record('moving_agree', int(agree))
         self.metrics.record('comb_rew', np.sum(rewards) if agree else 0)
+        self.metrics.record('pareto_opt', int(self.domain.is_pareto_opt(ctxs, choices)))
         for agent, reward in zip(self.agents, rewards):
             self.metrics.record('%s_rew' % agent.name, reward if agree else 0)
             self.metrics.record('%s_moving_rew' % agent.name, reward if agree else 0)

@@ -12,8 +12,8 @@
             "request": "launch",
             "program": "selfplay.py",
             "console": "integratedTerminal",
-            "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","full_model.th",
-                "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--selection_model_file","selection_model.th", "--alice_translator"]
+            "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","full_model.th", "--log_file", "selfplay_debug_log.txt",
+                "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--bob_selection_model_file","selection_model.th","--alice_selection_model_file","selection_model_pp.th",  "--alice_translator", "--verbose"]
         },
 
         {

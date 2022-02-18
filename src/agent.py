@@ -50,8 +50,11 @@ class RnnAgent(Agent):
         self.human = False
         self.domain = domain.get_domain(args.domain)
         self.allow_no_agreement = allow_no_agreement
-
-        self.sel_model = utils.load_model(args.selection_model_file)
+        if name == 'Alice':
+            selection_model_file = args.alice_selection_model_file
+        else:
+            selection_model_file = args.bob_selection_model_file
+        self.sel_model = utils.load_model(selection_model_file)
         self.sel_model.eval()
 
 
@@ -300,8 +303,12 @@ class RnnRolloutAgent(RnnAgent):
 class StrategyAgent(HierarchicalAgent):
     def __init__(self, model, args, name='Alice', train=False, diverse=False):
         super(StrategyAgent, self).__init__(model, args, name)
-
-        self.sel_model = utils.load_model(args.selection_model_file)
+        
+        if name == 'Alice':
+            selection_model_file = args.alice_selection_model_file
+        else:
+            selection_model_file = args.bob_selection_model_file
+        self.sel_model = utils.load_model(selection_model_file)
         self.sel_model.eval()
 
     def feed_context(self, context):
@@ -1592,7 +1599,12 @@ class LatentClusteringAgent(HierarchicalAgent):
             if args.scratch:
                 self.model.clear_weights()
 
-        self.sel_model = utils.load_model(args.selection_model_file)
+        if name == 'Alice':
+            selection_model_file = args.alice_selection_model_file
+        else:
+            selection_model_file = args.bob_selection_model_file
+
+        self.sel_model = utils.load_model(selection_model_file)
         self.sel_model.eval()
 
         self.all_rewards = []
@@ -1655,10 +1667,11 @@ class LatentClusteringAgent(HierarchicalAgent):
 
     def read(self, inpt):
         if self.translator:
-            plain_text = ' '.join(inpt[-1])
+            plain_text = ' '.join(inpt[:-1])
             translation = self.translator.translate(plain_text).split()
             translation.append('-')
             translation.extend(inpt)
+            inpt = translation
         inpt = ['THEM:'] + inpt
         inpt = Variable(self._encode(inpt, self.model.word_dict))
         self.sents.append(inpt)
@@ -1774,6 +1787,9 @@ class LatentClusteringAgent(HierarchicalAgent):
 
     def _choose(self, sample=False):
         sents = self.sents[:-1]
+        #print(self.name)
+        #for s in sents:
+        #    print(self.model.word_dict.i2w(s))
         lens, rev_idxs, hid_idxs = self._make_idxs(sents)
         sel_out = self.sel_model.forward(sents, lens, rev_idxs, hid_idxs, self.ctx)
 
@@ -2125,7 +2141,12 @@ class LatentClusteringFasterRolloutAgent(LatentClusteringAgent):
 class BaselineClusteringAgent(HierarchicalAgent):
     def __init__(self, model, args, name='Alice', train=False, diverse=False):
         super(BaselineClusteringAgent, self).__init__(model, args, name)
-        self.sel_model = utils.load_model(args.selection_model_file)
+        if name == 'Alice':
+            selection_model_file = args.alice_selection_model_file
+        else:
+            selection_model_file = args.bob_selection_model_file
+
+        self.sel_model = utils.load_model(selection_model_file)
         self.sel_model.eval()
 
     def feed_context(self, context):

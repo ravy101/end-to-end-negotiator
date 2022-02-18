@@ -386,7 +386,7 @@ class TranslationModel:
         for w in text.split():
             if w not in allowed_tokens:
                 #try substitute it
-                sub = levenshtein.levenshtein_substitution(w, allowed_tokens)
+                sub = models.levenshtein.levenshtein_substitution(w, allowed_tokens)
                 cleaned = cleaned + sub + ' '
             else:
                 cleaned = cleaned + w + ' '

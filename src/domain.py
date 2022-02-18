@@ -6,6 +6,7 @@
 
 
 import re
+import numpy as np
 from collections import OrderedDict
 
 
@@ -130,6 +131,58 @@ class ObjectDivisionDomain(Domain):
                 scores[agent_id] += int(ctx[2 * i + 1]) * taken
             agree = agree and (n == 0)
         return agree, scores
+
+    def is_pareto_opt(self, contexts, choices):
+        """Checks whether an agreed choice is pareto optimal."""
+        #print(contexts)
+        #print(choices)
+        cnts = [int(x) for x in contexts[0][0::2]]
+        _, vals1 = self.parse_context(contexts[0])
+        _, vals2 = self.parse_context(contexts[1])
+        picks1 = [self._to_int(choice[-1]) for choice in choices[0][:3]]
+        picks2 = [self._to_int(choice[-1]) for choice in choices[1][:3]]
+
+        agree = True
+        if np.min(picks1) == -1 or np.min(picks2) == -1:
+            agree= False
+        
+        for p1, p2, n in zip(picks1, picks2, cnts):
+            agree = agree and (p1 + p2 == n)
+
+        if not agree:
+            return int(agree)
+
+        score1 = self.compute_score(vals1, picks1)
+        score2 = self.compute_score(vals2, picks2)
+        choices = self.gen_choices(cnts)
+        can_improve = False
+        for cand1, cand2 in choices:
+            cand_score1 =  self.compute_score(vals1, cand1)
+            cand_score2 =  self.compute_score(vals2, cand2)
+            if (cand_score1 > score1 and cand_score2 >= score2) or (cand_score1 >= score1 and cand_score2 > score2):
+                can_improve = True
+
+        optimal = int(not can_improve)
+        return optimal
+
+    def compute_score(self, vals, picks):
+        """Compute the score of the selection."""
+        assert len(vals) == len(picks)
+        return np.sum([v * p for v, p in zip(vals, picks)])
+
+
+    def gen_choices(self, cnts, idx=0, choice=[]):
+        """Generate all the valid choices.
+        It generates both yours and your opponent choices.
+        """
+        if idx >= len(cnts):
+            return [(choice[:], [n - c for n, c in zip(cnts, choice)]),]
+        choices = []
+        for c in range(cnts[idx] + 1):
+            choice.append(c)
+            choices +=  self.gen_choices(cnts, idx + 1, choice)
+            choice.pop()
+        return choices
 
 
 class ObjectTradeDomain(ObjectDivisionDomain):

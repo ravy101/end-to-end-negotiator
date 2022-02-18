@@ -62,7 +62,11 @@ def prob_random():
     """Prints out the states of various RNGs."""
     print('random state: python %.3f torch %.3f numpy %.3f' % (
         random.random(), torch.rand(1)[0], np.random.rand()))
-
+        
+def is_pareto_opt(contexts, choices):
+    print(contexts)
+    print(choices)
+    return True
 
 class ContextGenerator(object):
     """Dialogue context generator. Generates contexes from the file."""
