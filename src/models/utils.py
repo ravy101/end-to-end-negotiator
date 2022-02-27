@@ -10,6 +10,7 @@ A set of useful tools.
 import torch
 import torch.nn as nn
 import math
+import numpy as np
 
 
 def init_rnn(rnn, init_range, weights=None, biases=None):
@@ -59,3 +60,5 @@ def make_mask(n, marked, value=-1000):
     for i in marked:
         mask[i] = value
     return mask
+
+

@@ -112,6 +112,7 @@ def main():
         help='batch size')
     parser.add_argument('--validate', action='store_true', default=False,
         help='plot graphs')
+    parser.add_argument('--logic_bob', action='store_true', default=False, help="Use simple rules based bob.")
 
 
     args = parser.parse_args()
@@ -132,10 +133,17 @@ def main():
     alice_ty = utils.get_agent_type(alice_model, args.smart_alice)
     alice = alice_ty(alice_model, args, name='Alice', train=False, diverse=args.diverse_alice, translator=alice_translator)
     alice.vis = args.visual
+    if not args.logic_bob:
+        bob_model = utils.load_model(args.bob_model_file)
+        bob_ty =  utils.get_agent_type(bob_model, args.smart_bob)
+        bob = bob_ty(bob_model, args, name='Bob', train=False, diverse=args.diverse_bob, translator=bob_translator)
+    else:
+        bob_model = None
+        bob_ty = LogicAgent
+        bob = bob_ty(args, name='Bob', translator=bob_translator)
 
-    bob_model = utils.load_model(args.bob_model_file)
-    bob_ty =  utils.get_agent_type(bob_model, args.smart_bob)
-    bob = bob_ty(bob_model, args, name='Bob', train=False, diverse=args.diverse_bob, translator=bob_translator)
+
+
 
     bob.vis = False
 

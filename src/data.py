@@ -172,16 +172,18 @@ class WordCorpus(object):
             freq_cutoff=freq_cutoff)
 
         self.train = self.tokenize(os.path.join(path, train)) if train else []
-        
+        self.test = self.tokenize(os.path.join(path, test)) if test else []
+        self.valid = self.tokenize(os.path.join(path, valid)) if valid else []
+
         if train and drop_fold > 0:
             start_index = int(len(self.train) * (drop_fold - 1)/5)
             end_index = int(len(self.train) * drop_fold/5)
+            self.valid = self.train[start_index:end_index]
             self.train = self.train[:start_index] + self.train[end_index:]
             print(f"train items between {start_index} and {end_index} removed")
 
+            
 
-        self.valid = self.tokenize(os.path.join(path, valid)) if valid else []
-        self.test = self.tokenize(os.path.join(path, test)) if test else []
 
         # find out the output length from the train dataset
         self.output_length = max([len(x[2]) for x in self.train])

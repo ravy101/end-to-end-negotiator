@@ -39,6 +39,17 @@ def load_model(file_name):
         return torch.load(f)
 
 
+def get_advantages(values, masks, rewards, gamma=.99, lmbda=.95):
+    returns = []
+    gae = 0
+    for i in reversed(range(len(rewards))):
+        delta = rewards[i] + gamma * values[i + 1] * masks[i] - values[i]
+        gae = delta + gamma * lmbda * masks[i] * gae
+        returns.insert(0, gae + values[i])
+
+    adv = np.array([r.cpu().detach() for r in returns]) - 1 * values[:-1]
+    return returns, (adv - np.mean(adv)) / (np.std(adv) + 1e-10)
+
 def set_seed(seed):
     """Sets random seed everywhere."""
     torch.manual_seed(seed)
@@ -62,11 +73,6 @@ def prob_random():
     """Prints out the states of various RNGs."""
     print('random state: python %.3f torch %.3f numpy %.3f' % (
         random.random(), torch.rand(1)[0], np.random.rand()))
-        
-def is_pareto_opt(contexts, choices):
-    print(contexts)
-    print(choices)
-    return True
 
 class ContextGenerator(object):
     """Dialogue context generator. Generates contexes from the file."""

@@ -12,6 +12,8 @@ import itertools
 import re
 
 import numpy as np
+import pandas as pd
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -101,6 +103,7 @@ def main():
         help='use clustering')
     parser.add_argument('--sep_sel', action='store_true', default=False,
         help='use separate classifiers for selection')
+    parser.add_argument("--sample_pass", action='store_true', default=False)
 
 
 
@@ -121,6 +124,38 @@ def main():
         model.cuda()
     engine = model_ty.engine_ty(model, args, verbose=True)
     train_loss, valid_loss, select_loss, extra = engine.train(corpus)
+
+    if args.sample_pass:
+        test_loss, test_select_loss, extra = engine.test(corpus, bsz_override = 1)
+        contexts = []
+        inputs = []
+        target = []
+        output = []
+        for i in range(len(extra['input'])):
+            ctx, _, inpts, _, _, sel_tgt, _, _, _ = extra['input'][i]
+            if args.sep_sel:
+                sel_tgt = Variable(sel_tgt)
+            else:
+                sel_tgt = [Variable(t) for t in sel_tgt]
+            ctx = Variable(ctx)
+            context = []
+            
+            for c in ctx:
+                context.append(corpus.context_dict.i2w(c))
+
+            inpts = [Variable(inpt) for inpt in inpts]
+            dialog = ''
+            for inp in inpts:
+                dialog = dialog + ' '.join(corpus.word_dict.i2w(inp)) + ' '
+            
+                
+            out1 = extra['output'][i] 
+            contexts.append(context)
+            inputs.append(dialog)
+            target.append(corpus.item_dict_old.i2w(sel_tgt))
+            output.append(corpus.item_dict_old.i2w(torch.argmax(out1, dim=1)))
+            
+        pd.DataFrame({'context': contexts, 'input':inputs, 'target': target, 'output':output}).to_csv(os.path.join(args.data, f"test_set{args.drop_fold}.csv"))
 
     utils.save_model(engine.get_model(), args.model_file)
 

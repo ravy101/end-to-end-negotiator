@@ -15,6 +15,15 @@
             "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","full_model.th", "--log_file", "selfplay_debug_log.txt",
                 "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--bob_selection_model_file","selection_model.th","--alice_selection_model_file","selection_model_pp.th",  "--alice_translator", "--verbose"]
         },
+        {
+            "name": "Python: Logic Self Play",
+            "type": "python",
+            "request": "launch",
+            "program": "selfplay.py",
+            "console": "integratedTerminal",
+            "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","full_model.th", "--log_file", "selfplay_debug_log.txt",
+                "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--bob_selection_model_file","selection_model.th","--alice_selection_model_file","selection_model_pp.th",  "--alice_translator","--bob_translator", "--verbose", "--logic_bob"]
+        },
 
         {
             "name": "Python: Chat Play",
@@ -50,8 +59,15 @@
             "program": "reinforce.py",
             "console": "integratedTerminal",
             "args": ["--cuda","--alice_model_file","full_model_pp.th","--bob_model_file","rnn_model_pp.th","--output_model_file","full_rl_model_pp.th", "--data", "data/negotiate_prepend/", "--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--verbose","--log_file","rnn_rl_pp.log","--sv_train_freq","4","--nepoch","4","--selection_model_file","selection_model_pp.th","--rl_lr","0.00001","--rl_clip","0.0001","--sep_sel"]
+        },
+        {
+            "name": "Python: PPO Play",
+            "type": "python",
+            "request": "launch",
+            "program": "reinforce_ppo.py",
+            "console": "integratedTerminal",
+            "args": ["--cuda","--alice_model_file","full_model.th","--bob_model_file","rnn_model.th","--output_model_file","full_rl_model.th","--context_file","data/negotiate/selfplay.txt","--temperature","0.5","--verbose","--log_file","rnn_rl.log","--sv_train_freq","4","--nepoch","4","--alice_selection_model_file","selection_model.th","--bob_selection_model_file","selection_model.th","--rl_lr","0.00001","--rl_clip","0.0001","--sep_sel"]
         }
-
 
     ]
 }

@@ -198,8 +198,13 @@ class EngineBase(object):
         return train_loss, valid_loss, valid_select_loss, extra
 
 
-    def test(self, corpus):
-        testdata = corpus.test_dataset(self.args.bsz)
+    def test(self, corpus, bsz_override = None):
+        if bsz_override:
+            batch_sz = bsz_override
+        else:
+            batch_sz = self.args.bsz
+
+        testdata = corpus.test_dataset(batch_sz)
 
         testset, testset_stats = testdata
         test_loss, test_select_loss, test_partner_ctx_loss, extra = \

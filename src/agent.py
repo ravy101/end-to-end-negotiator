@@ -20,7 +20,9 @@ import domain
 from engines import Criterion
 import math
 from collections import Counter
-
+from models.critic_model import CriticModel
+from torch.distributions.categorical import Categorical
+from models.language import TemplateLanguage
 
 class Agent(object):
     """ Agent's interface. """
@@ -41,7 +43,7 @@ class Agent(object):
 
 
 class RnnAgent(Agent):
-    def __init__(self, model, args, name='Alice', allow_no_agreement=True, train=False, diverse=False):
+    def __init__(self, model, args, name='Alice', allow_no_agreement=True, train=False, diverse=False, translator=None):
         super(RnnAgent, self).__init__()
         self.model = model
         self.model.eval()
@@ -1586,7 +1588,7 @@ class PredictionRolloutAgent(PredictionAgent):
 
 
 class LatentClusteringAgent(HierarchicalAgent):
-    def __init__(self, model, args, name='Alice', train=False, diverse=False, translator=None):
+    def __init__(self, model, args, name='Alice', train=False, diverse=False, translator=None, critic=False):
         super(LatentClusteringAgent, self).__init__(model, args, name)
         self.train = train
         if self.train:
@@ -1612,6 +1614,17 @@ class LatentClusteringAgent(HierarchicalAgent):
         self.logprobs = []
         self.entropys = []
         self.translator = translator
+
+        #TODO arg this PPO stuff
+        self.gamma = .99
+        self.lamb = .95
+        self.step_rew = []
+        self.values = []
+        self.read_message = []
+        if critic:
+            self.critic_model = CriticModel(model.word_dict, model.item_dict, model.context_dict, model.count_dict, args)
+        else:
+            self.critic_model = None
 
         if train and args.validate:
             dom = domain.get_domain(args.domain)
@@ -1642,6 +1655,9 @@ class LatentClusteringAgent(HierarchicalAgent):
 
     def feed_context(self, context):
         self.sents = []
+        #reset stuff
+        self.values = []
+        self.step_rew = []
         self.logprobs = []
         self.entropys = []
         self.context = context
@@ -1675,7 +1691,16 @@ class LatentClusteringAgent(HierarchicalAgent):
         inpt = ['THEM:'] + inpt
         inpt = Variable(self._encode(inpt, self.model.word_dict))
         self.sents.append(inpt)
+        self.read_message.append(True)
         self.lang_enc_h, self.mem_h = self.model.read(inpt, self.lang_enc_h, self.mem_h, self.ctx_h)
+        choice, _, p_agree = self._choose()
+        score = self.domain.score(self.context, choice)
+        #DW TODO maybe consider p_agree
+        self.step_rew.append(score)
+        if self.critic_model:
+            lens, rev_idxs, hid_idxs = self._make_idxs(self.sents)
+            self.values.append(self.critic_model.forward(self.sents, lens, rev_idxs, hid_idxs, self.ctx))
+            print(self.values)
 
     def write(self, max_words=100):
         _, lat_h, log_q_z = self.model.forward_prediction(self.cnt, self.mem_h, sample=self.train)
@@ -1693,6 +1718,7 @@ class LatentClusteringAgent(HierarchicalAgent):
         out, logprobs = self.model.write(self.lang_enc_h, lat_h, max_words, self.args.temperature)
         #self.logprobs += logprobs
         self.sents.append(out)
+        self.read_message.append(False)
         self.lang_enc_h, self.mem_h = self.model.read(out, self.lang_enc_h, self.mem_h, self.ctx_h)
         output = self._decode(out[1:], self.model.word_dict)
         if self.translator:
@@ -1715,7 +1741,7 @@ class LatentClusteringAgent(HierarchicalAgent):
             hid_idxs.append(Variable(ln.view(1, 1, 1)))
         return lens, rev_idxs, hid_idxs
 
-    def update(self, agree, max_reward, choice=None, partner_choice=None,
+    def _update(self, agree, max_reward, choice=None, partner_choice=None,
         partner_input=None, max_partner_reward=None):
 
         if not self.train:
@@ -1766,24 +1792,140 @@ class LatentClusteringAgent(HierarchicalAgent):
         nn.utils.clip_grad_norm(self.model.parameters(), self.args.rl_clip)
         self.opt.step()
 
+    def get_probs_and_value(self, up_to_sent):
+        sent_idx = 0
+        write_count = 0
+        for i, read in enumerate(self.read_message):
+            if not read:
+                write_count = write_count + 1
+            if write_count >= up_to_sent:
+                sent_idx = i
+                break
 
-        if self.args.visual and self.t % 10 == 0:
-            #self.model_plot.update(self.t)
-            self.agree_plot.update('agree', self.t, int(agree))
-            self.reward_plot.update('reward', self.t, reward)
-            self.reward_plot.update('partner_reward', self.t, partner_reward)
-            self.max_reward_plot.update('reward', self.t, max_reward)
-            self.max_reward_plot.update('partner_reward', self.t, max_partner_reward)
-            self.advantage_plot.update('advantage', self.t, reward - partner_reward)
-            self.advantage_plot.update('max_advantage', self.t, max_reward - max_partner_reward)
-            #self.temperature_plot.update('temperature', self.t, self.args.pred_temperature)
-            self.loss_plot.update('loss', self.t, loss.data[0][0])
-            self.entropy_plot.update('entropy', self.t, np.mean(np.array(self.entropys)))
-            if self.t % 100 == 0:
-                self.last_ppl = np.exp(self._validate_model())
-            self.ppl_plot.update('ppl', self.t, self.last_ppl)
-            #if self.t < 500:
-            #    self.args.pred_temperature -= 1./50.0 * 9
+        _, lat_h, log_q_z = self.model.forward_prediction(self.cnt, self.mem_h, sample=self.train)
+        lens, rev_idxs, hid_idxs = self._make_idxs(self.sents[:sent_idx])
+        new_value = self.critic_model.forward(self.sents, lens, rev_idxs, hid_idxs, self.ctx)
+        entropy = Categorical(logits=log_q_z).entropy()
+        return log_q_z, entropy, new_value
+
+    def update(self, agree, max_reward, choice=None, partner_choice=None,
+        partner_input=None, max_partner_reward=None):
+
+        if not self.train:
+            return
+
+        self.t += 1
+
+        if len(self.logprobs) == 0:
+            return
+
+        reward = max_reward if agree else 0
+        #self.step_rew.append(reward)
+        choice, _, p_agree = self._choose()
+        score = self.domain.score(self.context, choice)
+        #DW TODO maybe consider p_agree
+        self.step_rew.append(score)
+
+        lens, rev_idxs, hid_idxs = self._make_idxs(self.sents)
+        self.values.append(self.critic_model.forward(self.sents, lens, rev_idxs, hid_idxs, self.ctx))
+        self.values.append(torch.zeros((1,1)))
+
+        rewards = torch.FloatTensor(self.step_rew).cuda()
+        values = torch.cat(self.values).cuda()
+        logprobs = torch.cat(self.logprobs).cuda()
+        advantages = torch.zeros_like(rewards).cuda()
+        
+        num_steps = len(self.step_rew)
+
+        lastgaelam = 0
+        for t in reversed(range(num_steps)):
+            nextvalues = values[t + 1]
+            delta = rewards[t] + self.gamma * nextvalues  - values[t]
+            advantages[t] = lastgaelam = delta + self.gamma * self.lamb * lastgaelam
+        values = values[:-1]
+        returns = advantages + values
+
+        
+
+
+
+         # flatten the batch
+        #b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
+        b_logprobs = logprobs.reshape(-1)
+        #b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
+        b_advantages = advantages.reshape(-1)
+        b_returns = returns.reshape(-1)
+        b_values = values.reshape(-1)
+
+        # Optimizaing the policy and value network
+        #TODO arg this
+        ppo_clip_vloss = True
+        ppo_norm_adv = False
+        ppo_epochs = 1
+        ppo_clip_coeff = 0.2
+        ppo_ent_coef = 0.01
+        ppo_vf_coef = 0.5
+
+        b_inds = np.arange(num_steps)
+        clipfracs = []
+        for epoch in range(ppo_epochs):
+            #np.random.shuffle(b_inds)
+            for start in range(0, num_steps, 1):
+                end = start + 1
+                mb_inds = b_inds[start:end]
+                newlogprob, entropy, newvalue = self.get_probs_and_value(start)
+                #_, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb_inds], b_actions.long()[mb_inds])
+                logratio = newlogprob - b_logprobs[mb_inds]
+                ratio = logratio.exp()
+
+                torch.autograd.set_detect_anomaly(True)
+                
+                with torch.no_grad():
+                    # calculate approx_kl http://joschu.net/blog/kl-approx.html
+                    # old_approx_kl = (-logratio).mean()
+                    approx_kl = ((ratio - 1) - logratio).mean()
+                    clipfracs += [((ratio - 1.0).abs() > ppo_clip_coeff).float().mean().item()]
+
+                mb_advantages = b_advantages[mb_inds]
+                if ppo_norm_adv:
+                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+
+                # Policy loss
+                pg_loss1 = -mb_advantages * ratio
+                pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - ppo_clip_coeff, 1 + ppo_clip_coeff)
+                pg_loss = torch.max(pg_loss1, pg_loss2).mean()
+
+                # Value loss
+                newvalue = newvalue.view(-1)
+                if ppo_clip_vloss:
+                    #v_loss_unclipped = (newvalue - b_returns[mb_inds]) ** 2
+                    v_loss_unclipped = (newvalue - b_returns[mb_inds]) ** 2
+                    v_clipped = b_values[mb_inds] + torch.clamp(
+                        newvalue - b_values[mb_inds],
+                        -ppo_clip_coeff,
+                        ppo_clip_coeff,
+                    )
+                    v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
+                    v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
+                    v_loss = 0.5 * v_loss_max.mean()
+                else:
+                    v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
+
+                entropy_loss = entropy.mean()
+                loss = pg_loss - ppo_ent_coef * entropy_loss + v_loss * ppo_vf_coef
+                self.opt.zero_grad()
+                
+                loss.backward()
+                #nn.utils.clip_grad_norm_(agent.parameters(), args.max_grad_norm)
+                self.model.latent_bottleneck.zero_grad()
+                self.sel_model.zero_grad()
+                self.model.lang_model.zero_grad()
+                
+                #THIS ADDED
+                nn.utils.clip_grad_norm(self.model.parameters(), self.args.rl_clip)
+                
+                self.opt.step()
+
 
     def _choose(self, sample=False):
         sents = self.sents[:-1]
@@ -2151,6 +2293,9 @@ class BaselineClusteringAgent(HierarchicalAgent):
 
     def feed_context(self, context):
         self.sents = []
+        #reset stuff
+        self.values = []
+        self.step_rew = []
         self.context = context
         print(context)
         self.ctx = Variable(self._encode(context, dictionary=self.model.context_dict))
@@ -2401,5 +2546,133 @@ class HumanAgent(Agent):
     def update(self, agree, max_reward, choice=None, partner_choice=None,
         partner_input=None, max_partner_reward=None):
         pass
+
+class LogicAgent(Agent):
+    def __init__(self, args, name='Logic', translator=None):
+        self.name = name
+        self.human = False
+        self.domain = domain
+        self.translator = translator
+        self.language = TemplateLanguage()
+        self.item_tokens = {"_books":0, "_hats":1, "_balls":2}
+
+    def add_one(self, counts, limits):
+        for i in reversed(range(len(counts))):
+            print(i)
+            if counts[i] < limits[i] or i == 0:
+                counts[i] += 1
+                break
+            else:
+                counts[i] = 0
+        return counts
+
+    def feed_context(self, ctx):
+        self.ctx = ctx
+        self.inventory = np.array([int(x) for x in ctx[0::2]])
+        self.item_values = np.array([int(x) for x in ctx[1::2]])
+        self.possible_splits = []
+        self.split_values = []
+        self.proposals = []
+
+        counts = np.zeros(len(self.inventory))
+        while counts[0] <= int(self.inventory[0]):
+            self.possible_splits.append(counts.copy())
+            counts = self.add_one(counts, self.inventory)
+        
+        for split in self.possible_splits:
+            self.split_values.append((self.item_values*split).sum())
+
+    def get_remainder(self, split):
+        items = self.inventory.copy()
+        remainder = np.zeros(len(split))
+        for i in range(len(split)):
+            remainder = self.inventory[i] - split[i]
+        return remainder
+
+    def feed_partner_context(self, partner_context):
+        pass
+    
+    def read(self, inpt):
+        if self.translator:
+            plain_text = ' '.join(inpt[:-1])
+            translation = self.translator.translate(plain_text).split()
+            inpt = translation
+        if self.language.deal in template:
+            self.deal_accepted = True
+        else:
+            proposal = self.interpret_template(inpt)
+
+    def interpret_template(self, template, self_speaker=False):
+
+
+        need_idx = template.index(self.language.need) if self.language.need in template else -1
+        offer_idx = template.index(self.language.offer)if self.language.offer in template else -1
+        need_items = np.empty(len(self.inventory))
+        offer_items = np.empty(len(self.inventory))
+        if need_idx >= 0:
+            close_need =template.index(self.language.close_group, need_idx)
+            need_items = self.parse_items(template[need_idx+1:close_need])
+        if offer_idx >= 0:
+            close_offer =template.index(self.language.close_group, offer_idx)
+            offer_items = self.parse_items(template[offer_idx+1:close_offer])
+
+        for i in range(len(self.inventory)):
+            if need_items[i] == "rest":
+                need_items[i] = self.inventory[i] - offer_items[i]
+            elif offer_items[i] == "rest":
+                offer_items[i] = self.inventory[i] - need_items[i]
+
+        if offer_items is None and need_items is not None:
+            offer_items = self.get_remainder(need_items)
+        elif need_items is None and offer_items is not None:
+            need_items = self.get_remainder(offer_items)
+        print("Need Items: ", need_items)
+        print("Offer Items: ", offer_items)
+        
+
+
+    def parse_items(self, items):
+        item_set = np.zeros(len(self.inventory))
+        for i, i_token in enumerate(self.language.items):
+            if i_token in items:
+                value = items[items.index(i_token)+1]
+                if value == self.language.all:
+                    value = self.inventory[i]              
+                item_set[i] = value
+        return item_set
+
+
+
+    def write(self, max_words = 100):
+        while True:
+            try:
+                return input('%s : ' % self.name).lower().strip().split() + ['<eos>']
+            except KeyboardInterrupt:
+                sys.exit()
+            except:
+                print('Your sentence is invalid! Try again.')
+
+    def choose(self):
+        while True:
+            try:
+                valid_choice = False
+                while not valid_choice:
+                    human_choice = input('Please enter %s choice : ' % self.name)
+                    try:
+                        choice = self.domain.parse_human_choice(self.ctx, human_choice)
+                        valid_choice = True
+                    except:
+                        print("Unable to parse selection. Please enter 3 integers separated by spaces indicating the number of books, hats and balls selected.")
+                return choice
+            except KeyboardInterrupt:
+                sys.exit()
+            #except:
+            #    print('Your choice is invalid! Try again.')
+        
+    
+    def update(self, agree, max_reward, choice=None, partner_choice=None,
+        partner_input=None, max_partner_reward=None):
+        pass
+
 
 
